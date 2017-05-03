@@ -5,13 +5,13 @@ const readline = require('readline');
 const BASE_API = "http://www.bttt.la/";
 let movieName = '';
 
+// 用户输入
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
-  prompt: '请输入name>:'
+  prompt: '输入需要抓取的电影标题>:'
 });
 rl.prompt();
-
 rl.on('line', (val) => {
   movieName = encodeURI(val);
   rl.close();
@@ -23,9 +23,9 @@ rl.on('line', (val) => {
   });
 });
 
+// 获取页面html源码
 const getUrlDom = (url) => {
   return new Promise((resolve, reject) => {
-    console.log('正在请求搜索结果...');
     http.get(url, (res) => {
       let html = '';
       res.on('data', (data) => {
@@ -41,8 +41,45 @@ const getUrlDom = (url) => {
   });
 }
 
+// 分析搜索结果页面
 const filterSourceHtml = (html) => {
   const $ = cheerio.load(html);
   const count = $('.pagelist').text();
-  console.log(`共抓取到${count}`);
+  const urlArr = [];
+  let all = $('.title');
+  for(let i = 0; i < all.length; i += 1) {
+    const movie = {
+      title: $(all[i]).find('.tt b').text(),
+      url: $(all[i]).find('.tt a').attr('href'),
+    }
+    getMovieHTML(movie);
+    urlArr.push(movie);
+  }
+  // getMovieHTML(urlArr);
+}
+
+// 循环请求单个电影页面
+const getMovieHTML = (source) => {
+  const url = `${BASE_API}${source.url}`;
+  getUrlDom(url).then((res) => {
+    const results = res;
+    filterMovieLink(source.title, results);
+  });
+}
+
+// 循环遍历单个页面html，获取每部电影种子的下载链接
+const filterMovieLink = (tit, html) => {
+  sleep(3000);
+  console.log(`正在抓取电影：《${tit}》`);
+  const $ = cheerio.load(html);
+  const count = $('.tinfo').length;
+  console.log(`《${tit}》共抓取到${count}个种子文件`);
+}
+
+const sleep = (num) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, num);
+  });
 }
