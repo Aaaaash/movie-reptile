@@ -94,21 +94,22 @@ const filterDownLink = (tit, html) => {
   const downLink = $('form').attr('action');
   console.log(downLink);
   const url = `${BASE_API}/${downLink}`;
-  const data = {
+  const data = JSON.stringify({
     action: 'download',
-    id: 24978,
+    id: 24987,
     uhash: '0cd8310fffa520dff7471f56',
     'imageField.x': 61,
     'imageField.y': 40,
-  }
+  });
+  console.log(Buffer.byteLength(data));
   const options = {
     method: 'POST',
     host: BASE_API,
     path: downLink,
     headers: {
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Length': Buffer.byteLength(data),
-      'Content-Disposition': 'attachment; filename="%E3%80%90BT%E5%A4%A9%E5%A0%82%E3%80%91%E3%80%90BTtt.la%E3%80%91[720p]%E7%BB%BF%E5%B7%A8%E4%BA%BA%E5%A4%A7%E6%88%98.322.46MB.torrent"'
+      // 'Content-Disposition': 'attachment; filename="%E3%80%90BT%E5%A4%A9%E5%A0%82%E3%80%91%E3%80%90BTtt.la%E3%80%91[720p]%E7%BB%BF%E5%B7%A8%E4%BA%BA%E5%A4%A7%E6%88%98.322.46MB.torrent"'
     },
   };
   const req = http.request(options, (res) => {
