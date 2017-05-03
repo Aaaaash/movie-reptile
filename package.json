@@ -1,0 +1,25 @@
+{
+  "name": "movie-reptile",
+  "version": "1.0.0",
+  "description": "nodejs电影bt种子爬虫",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SakuB/movie-reptile.git"
+  },
+  "keywords": [
+    "node"
+  ],
+  "author": "sakura",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SakuB/movie-reptile/issues"
+  },
+  "homepage": "https://github.com/SakuB/movie-reptile#readme",
+  "dependencies": {
+    "cheerio": "^0.22.0"
+  }
+}
