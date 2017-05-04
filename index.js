@@ -3,8 +3,9 @@ const cheerio = require('cheerio');
 const readline = require('readline');
 const request = require('request');
 const fs = require('fs');
+const qs = require('querystring');
 
-const BASE_API = "http://www.bttt.la/";
+const BASE_API = "http://www.bttt.la";
 let movieName = '';
 
 // 用户输入
@@ -18,7 +19,7 @@ rl.on('line', (val) => {
   movieName = encodeURI(val);
   rl.close();
 }).addListener('close', () => {
-  const url = `${BASE_API}s.php?q=${movieName}&sitesearch=www.bttt.la&domains=bttt.la&hl=zh-CN&ie=UTF-8&oe=UTF-8`;
+  const url = `${BASE_API}/s.php?q=${movieName}&sitesearch=www.bttt.la&domains=bttt.la&hl=zh-CN&ie=UTF-8&oe=UTF-8`;
   getUrlDom(url).then((res) => {
     const results = res;
     filterSourceHtml(results);
@@ -63,7 +64,7 @@ const filterSourceHtml = (html) => {
 
 // 循环请求单个电影页面
 const getMovieHTML = (source) => {
-  const url = `${BASE_API}${source.url}`;
+  const url = `${BASE_API}/${source.url}`;
   getUrlDom(url).then((res) => {
     const results = res;
     filterMovieLink(source.title, source.id, results);
@@ -81,7 +82,7 @@ const filterMovieLink = (tit, id, html) => {
   const btArr = [];
   for (let i = 0; i < count; i += 1) {
     const btUrl = $(arr[i]).find('a').attr('href');
-    const url = `${BASE_API}${btUrl}`;
+    const url = `${BASE_API}/${btUrl}`;
     const uhash = btUrl.substr((btUrl.indexOf('uhash=') + 6));
     getUrlDom(url).then((res) => {
       filterDownLink(tit, id, uhash, res);
@@ -90,64 +91,43 @@ const filterMovieLink = (tit, id, html) => {
 }
 
 const filterDownLink = (tit, id, uhash, html) => {
-  sleep(3000);
   const $ = cheerio.load(html);
   const downLink = $('form').attr('action');
-  const url = `${BASE_API}/${downLink}`;
-  const data = JSON.stringify({
+  const url = `${BASE_API}${downLink}`;
+  const data = qs.stringify({
     action: 'download',
-    id: parseInt(id),
+    id: parseInt(id), 
     uhash: uhash,
-    'imageField.x': 61,
+    'imageField.x': 77,
     'imageField.y': 40,
   });
   const options = {
-    // url: `${BASE_API}${downLink}`,
-    host: BASE_API,
+    host: 'www.bttt.la',
     path: downLink,
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Length': Buffer.byteLength(data),
+      'Content-Length': data.length,
     },
   };
   const req = http.request(options, (res) => {
-    let data;
-    res.on('data', (chunk) => {
-      data += chunk
-      console.log('~~~~');
+    let result;
+    res.on('data', (buffer) => {
+      result += buffer;
     })
+    .pipe(fs.createWriteStream(`${decodeURI(movieName)}-${uhash}.torrent`));
     res.on('end', () => {
-      data.pipe(fs.createWriteStream(`${movieName}${uhash}.txt`));
+      console.log('下载成功!');
     })
-  });
-  console.log(req);
-  req.on('error', (e) => {
-    console.log(e.message);
+    res.on('error', (err) => {
+    console.log(err);
+  })
   })
   req.write(data);
   req.end();
-  // request(options)
-    // .on('response', (res) => {
-    //   console.log('keke');
-    //   const entTime = new Date().getTime();
-    //   console.log(`正在下载种子文件。。。`);
-    //   res.pipe(fs.createWriteStream(`${movieName}${uhash}.torrent`));
-    // })
-    // .on('error', (err) => {
-    //   console.log(err.message);
-    // })
-    // .pipe(fs.createWriteStream(`${movieName}${uhash}.torrent`));
-  // const req = http.request(options, (res) => {
-  //   res.on('data', (data) => {
-  //     console.log(data);
-  //   });
-  //   res.on('end', () => {
-  //     console.log('wanle');
-  //   });
-  // });
-  // req.write(data);
-  // req.end();
+  req.on('error', (err) => {
+    console.log(`出错咯：${err.message}`);
+  });
 }
 
 function sleep(ms) {
