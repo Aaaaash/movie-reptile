@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/SakuB/movie-reptile#readme",
   "dependencies": {
-    "cheerio": "^0.22.0"
+    "cheerio": "^0.22.0",
+    "request": "^2.81.0"
   }
 }
