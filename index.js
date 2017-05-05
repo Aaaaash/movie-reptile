@@ -50,15 +50,29 @@ const filterSourceHtml = (html) => {
   const count = $('.pagelist').text();
   const urlArr = [];
   let all = $('.title');
+  if (all.length === 0) return console.log(`没有找到${decodeURI(movieName)}`);
+  console.log(`关键字${decodeURI(movieName)}共找到以下电影:`)
   for(let i = 0; i < all.length; i += 1) {
     const movie = {
       title: $(all[i]).find('.tt b').text(),
       url: $(all[i]).find('.tt a').attr('href'),
       id: ($(all[i]).find('.tt a').attr('href')).replace(/[^0-9]/ig,""),
     }
-    getMovieHTML(movie);
+    console.log(`${i + 1}==>《${$(all[i]).find('.tt b').text()}》`);
+    // getMovieHTML(movie);
     urlArr.push(movie);
   }
+  let num = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: '请输入相应电影序号抓取下载地址（如不输入或输入其他字符则获取全部下载地址）：'
+  });
+  num.prompt();
+  num.on('line', (val) => {
+    console.log(val);
+    // movieName = encodeURI(val);
+    num.close();
+  })
   // getMovieHTML(urlArr);
 }
 
