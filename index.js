@@ -74,6 +74,7 @@ const filterSourceHtml = (html) => {
     num.close();
   })
   // getMovieHTML(urlArr);
+  console.log('');
 }
 
 // 循环请求单个电影页面
