@@ -59,7 +59,6 @@ const filterSourceHtml = (html) => {
       id: ($(all[i]).find('.tt a').attr('href')).replace(/[^0-9]/ig,""),
     }
     console.log(`${i + 1}==>《${$(all[i]).find('.tt b').text()}》`);
-    // getMovieHTML(movie);
     urlArr.push(movie);
   }
   let num = readline.createInterface({
@@ -67,23 +66,26 @@ const filterSourceHtml = (html) => {
     output: process.stdout,
     prompt: '请输入相应电影序号抓取下载地址（如不输入或输入其他字符则获取全部下载地址）：'
   });
+  let downArr = [];
   num.prompt();
   num.on('line', (val) => {
-    console.log(val);
-    // movieName = encodeURI(val);
+    if (val === '') downArr = urlArr;
+    downArr = urlArr.filter((item, index) => index !== parseInt(val));
     num.close();
-  })
-  // getMovieHTML(urlArr);
-  console.log('');
+  }).addListener('close', () => {
+    getMovieHTML(downArr);
+  });
 }
 
 // 循环请求单个电影页面
 const getMovieHTML = (source) => {
-  const url = `${BASE_API}/${source.url}`;
-  getUrlDom(url).then((res) => {
-    const results = res;
-    filterMovieLink(source.title, source.id, results);
-  });
+  for (let i = 0; i < source.length; i += 1) {
+    const url = `${BASE_API}/${source[i].url}`;
+    getUrlDom(url).then((res) => {
+      const results = res;
+      filterMovieLink(source[i].title, source[i].title, results);
+    });
+  }
 }
 
 // 循环遍历单个页面html，获取每部电影种子的下载链接
