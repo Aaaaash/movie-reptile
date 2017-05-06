@@ -1,7 +1,6 @@
 const http = require('http');
 const cheerio = require('cheerio');
 const readline = require('readline');
-const request = require('request');
 const fs = require('fs');
 const qs = require('querystring');
 
@@ -69,13 +68,17 @@ const filterSourceHtml = (html) => {
   let downArr = [];
   num.prompt();
   num.on('line', (val) => {
-    if (val === '') downArr = urlArr;
-    downArr = urlArr.filter((item, index) => index !== parseInt(val));
+    if (val === '') {
+      downArr = urlArr;
+    } else {
+      downArr = urlArr.filter((item, index) => index === parseInt(val - 1));
+    }
     num.close();
   }).addListener('close', () => {
     getMovieHTML(downArr);
   });
 }
+
 
 // 循环请求单个电影页面
 const getMovieHTML = (source) => {
@@ -83,31 +86,36 @@ const getMovieHTML = (source) => {
     const url = `${BASE_API}/${source[i].url}`;
     getUrlDom(url).then((res) => {
       const results = res;
-      filterMovieLink(source[i].title, source[i].title, results);
+      filterMovieLink(source[i].title, source[i].id, results);
     });
   }
 }
 
 // 循环遍历单个页面html，获取每部电影种子的下载链接
 const filterMovieLink = (tit, id, html) => {
-  sleep(3000)
   console.log(`正在抓取电影：《${tit}》`);
   const $ = cheerio.load(html);
   const arr = $('.tinfo');
   const count = arr.length > 5 ? 5 : arr.length;
+  const dir = `../../种子爬虫/${decodeURI(movieName)}`;
   console.log(`《${tit}》共抓取到${count}个种子文件`);
+  fs.mkdir(dir, (err) => {
+    console.log(`创建${decodeURI(movieName)}目录成功，开始下载种子文件`);
+  });
   const btArr = [];
   for (let i = 0; i < count; i += 1) {
     const btUrl = $(arr[i]).find('a').attr('href');
+    const fileName = $(arr[i]).find('.torrent').text();
+    const fileSize = $(arr[i]).find('.torrent em').text();
     const url = `${BASE_API}/${btUrl}`;
     const uhash = btUrl.substr((btUrl.indexOf('uhash=') + 6));
     getUrlDom(url).then((res) => {
-      filterDownLink(tit, id, uhash, res);
+      filterDownLink(tit, id, uhash, res, fileSize, dir);
     });
   }
 }
 
-const filterDownLink = (tit, id, uhash, html) => {
+const filterDownLink = (tit, id, uhash, html, size, dir) => {
   const $ = cheerio.load(html);
   const downLink = $('form').attr('action');
   const url = `${BASE_API}${downLink}`;
@@ -115,8 +123,8 @@ const filterDownLink = (tit, id, uhash, html) => {
     action: 'download',
     id: parseInt(id), 
     uhash: uhash,
-    'imageField.x': 77,
-    'imageField.y': 40,
+    'imageField.x': 95,
+    'imageField.y': 38,
   });
   const options = {
     host: 'www.bttt.la',
@@ -132,7 +140,7 @@ const filterDownLink = (tit, id, uhash, html) => {
     res.on('data', (buffer) => {
       result += buffer;
     })
-    .pipe(fs.createWriteStream(`${decodeURI(movieName)}-${uhash}.torrent`));
+    .pipe(fs.createWriteStream(`${dir}/${decodeURI(movieName)}-${size}-${uhash}.torrent`));
     res.on('end', () => {
       console.log('下载成功!');
     })
